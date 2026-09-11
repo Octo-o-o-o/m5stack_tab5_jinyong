@@ -1,0 +1,82 @@
+# Local handoff with machine paths; not part of the public tree
+IMPL-PROMPT.md
+
+# Build trees
+build/
+cmake-build-*/
+**/build/
+**/managed_components/
+**/sdkconfig
+**/sdkconfig.old
+**/CMakeCache.txt
+**/CMakeFiles/
+compile_commands.json
+
+# Local / host-only artifacts (never commit game data)
+/local/
+/sdcard/
+/sd_image/
+/host/build/
+*.log
+last-build.log
+
+# Original / merged game resources (commercial data, not this repo)
+*.IDX
+*.GRP
+*.idx
+*.grp
+*.SDX
+*.SMP
+*.WDX
+*.WMP
+*.sdx
+*.smp
+*.wdx
+*.wmp
+*.XMI
+*.xmi
+*.WAV
+*.wav
+*.BIG
+*.big
+*.COL
+*.col
+*.002
+Z.DAT
+z.dat
+RANGER.*
+ALLSIN.*
+ALLDEF.*
+R[1-9].*
+S[1-9].*
+D[1-9].*
+FIGHT[0-9][0-9][0-9].*
+SDX[0-9][0-9][0-9]
+SMP[0-9][0-9][0-9]
+WDX[0-9][0-9][0-9]
+WMP[0-9][0-9][0-9]
+*.otf
+*.ttf
+*.ttc
+
+# Firmware binaries and flash dumps
+*.bin
+*.elf
+*.map
+*.img
+flash_args
+
+# Secrets / machine-local
+.env
+.env.*
+*.pem
+id_rsa
+wifi_password*
+credentials*
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*~
