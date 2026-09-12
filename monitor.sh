@@ -4,7 +4,7 @@
 set -euo pipefail
 
 root="$(cd "$(dirname "$0")" && pwd)"
-proj="${root}/firmware/bringup"
+proj="${root}/firmware/${TAB5_FIRMWARE:-game}"
 port="${ESPPORT:-/dev/cu.usbmodem1101}"
 
 if [[ "${port}" == "/dev/cu.usbmodem01" ]]; then

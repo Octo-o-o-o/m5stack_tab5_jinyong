@@ -22,7 +22,7 @@ static void log_boot(void)
         flash_bytes = 0;
     }
 
-    ESP_LOGI(BRINGUP_TAG, "tab5_jinyong M1 bring-up (not a game, not Octoooo)");
+    ESP_LOGI(BRINGUP_TAG, "tab5_jinyong bring-up");
     ESP_LOGI(BRINGUP_TAG, "IDF %s  chip=%s cores=%d rev=%d  flash=%u MB",
              IDF_VER,
              CONFIG_IDF_TARGET,

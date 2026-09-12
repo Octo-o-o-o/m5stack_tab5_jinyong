@@ -86,7 +86,8 @@ limit_fps = 30
 
 [ui]
 simplified_chinese = false
-no_name_input = true
+no_name_input = false
+# default_name = "徐小俠"
 show_potential = true
 show_map_mini_panel = false
 show_minimap = false

@@ -1,18 +1,25 @@
 #!/usr/bin/env bash
-# Configure and build the M1 Tab5 bring-up firmware. Does not flash.
+# Configure and build the Tab5 game firmware (default) or bring-up.
+# Does not flash.
 
 set -euo pipefail
 
 root="$(cd "$(dirname "$0")" && pwd)"
-proj="${root}/firmware/bringup"
+target="${TAB5_FIRMWARE:-game}"
+proj="${root}/firmware/${target}"
 log="${proj}/last-build.log"
+
+if [[ ! -d "${proj}" ]]; then
+    echo "Unknown firmware target: ${target} (${proj})" >&2
+    exit 1
+fi
 
 # shellcheck disable=SC1091
 . "${root}/scripts/idf_env.sh"
 
 mkdir -p "${proj}"
 {
-    echo "=== tab5_jinyong M1 build $(date -u +%Y-%m-%dT%H:%M:%SZ) ==="
+    echo "=== tab5_jinyong ${target} build $(date -u +%Y-%m-%dT%H:%M:%SZ) ==="
     echo "IDF_PATH=${IDF_PATH}"
     idf.py --version
     cd "${proj}"

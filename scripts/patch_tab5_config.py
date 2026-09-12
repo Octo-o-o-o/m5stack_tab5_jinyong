@@ -18,7 +18,7 @@ PATCHES = {
         "limit_fps": "limit_fps = 30",
     },
     "ui": {
-        "no_name_input": "no_name_input = true",
+        "no_name_input": "no_name_input = false",
         "show_minimap": "show_minimap = false",
         "show_map_mini_panel": "show_map_mini_panel = false",
         "scale": "scale = 2.0",

@@ -1,5 +1,5 @@
 # platform/tab5
 
-Tab5 平台层草稿。M2 才接到 HeroesOfJinYong；M1 bring-up **不链接**这些头文件，避免把未实现的 API 编进硬件测试。
+实现在 `firmware/game/components/tab5_platform/`。公开 C API 是 `tab5_platform.h`。
 
-core 只应依赖这里的 C 类型，不准 include ESP-IDF 驱动头。
+HOJY 的 scene/audio 仍然 `#include <SDL.h>`；设备上那是 `firmware/game/components/hojy_sdl`，不是桌面 SDL2。键盘 I2C HID 在 `SDL_PollEvent` 里变成 scancode。

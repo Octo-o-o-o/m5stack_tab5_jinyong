@@ -1,4 +1,6 @@
-# HeroesOfJinYong 源码分析（M0）
+# HeroesOfJinYong 源码分析
+
+立项时对 submodule 的阅读笔记，不是移植进度表。当前能做什么见仓库根 README；设备上的覆盖层和内存账见 `ARCHITECTURE.md` / `PERF_PLAN.md`。
 
 读过的对象是本仓 submodule，不是只复述 upstream README。
 
@@ -7,7 +9,7 @@
 - 许可证：GPLv3（`LICENSE`）
 - 默认构建：`USE_FREETYPE=OFF`（`stb_truetype`），`USE_SOXR=OFF`（`zita-resampler`），`BUILD_TOOLS=OFF`
 - 语言：C++17，CMake
-- 本会话未改动该 submodule 的源码
+- 不改该 submodule 的源码；设备差异只放覆盖层
 
 嵌套 submodule（随 HeroesOfJinYong 检出）：
 
@@ -168,8 +170,7 @@ core **不准**吃 I2C 或 USB HID scancode；Tab5 Keyboard 的 I2C HID 包要�
 - SFX：`ATK00.WAV`…、`E00.WAV`… 共约 77 个 WAV
 - `Mixer::service()` 在固定 tick 里做 fade / 文件加载 / 通道清理（主线程，锁 `playMutex_`）
 
-设备端顺序已拍板：画面 → 输入 → 能跑 → 存档 → SFX → BGM。  
-**不要**为了保桌面 MIDI 把 `libADLMIDI` / `zita-resampler` 硬搬上 P4。M4 优先 Mac 预处理成 IMA ADPCM / 低码率 PCM。
+设备上不链 `libADLMIDI` / 不在 P4 上实时合成 XMI。BGM 是 host 预渲染的 WAV，流式播放。
 
 ### 4.4 Filesystem
 
@@ -195,7 +196,7 @@ core **不准**吃 I2C 或 USB HID scancode；Tab5 Keyboard 的 I2C HID 包要�
 - `USE_FREETYPE` 才会链 FreeType（CMake 默认 OFF）
 - 字号随窗口变；1024×640 大约 26px
 
-设备端：**host 预生成 bitmap/atlas**，不要上完整 FreeType，也不要在 P4 上跑 stb 解析整份 OTF（一份中文字体经常 5–15 MB）。
+设备端：host 按对话和人名做子集 OTF（约 2 MB），设备上仍用 stb 栅格进小 atlas。不要上完整 FreeType，也不要把 50 MB 系统字体整份读进 PSRAM。
 
 ---
 
@@ -216,7 +217,7 @@ core **不准**吃 I2C 或 USB HID scancode；Tab5 Keyboard 的 I2C HID 包要�
 - `save()` 先 snapshot，再 `AtomicFile::writePair`（6 个文件一组）
 - 失败保留原状态（先反序列化到临时 `SaveData loaded`）
 
-这已经接近「认真存档」。M4 再加成功提示与可选 autosave slot，**不能破坏**上述文件名与原子替换。
+设备上改成边序列化边落盘，slot 文件名与记录格式保持不变。可选 autosave 还没做，不能为了它改文件名。
 
 ### 5.3 Host 预处理
 
@@ -224,11 +225,11 @@ core **不准**吃 I2C 或 USB HID scancode；Tab5 Keyboard 的 I2C HID 包要�
 `prepare_game_data.sh` 只在 host 跑；产物进 `local/`（gitignore），再由人拷到 SD：
 
 ```
-/jinyong/data/
-/jinyong/music/
+/jinyong/config.toml
+/jinyong/data/                 # makedata 产物；BGM 的 GAME*.WAV 也在这里
+/jinyong/data/font/chinese.otf
+/jinyong/fonts/chinese.otf
 /jinyong/save/
-/jinyong/config/
-/jinyong/fonts/
 ```
 
 ---
@@ -269,7 +270,9 @@ src/main.cc ──► content::loadData (Z.DAT, KDEF/TALK, WAR.*)
 
 ---
 
-## 7. 内存 / 性能初估（Tab5：16 MB Flash，32 MB PSRAM，内部 SRAM 紧张）
+## 7. 内存 / 性能初估（立项时，不要当现状）
+
+已落地的数字和做法见 [PERF_PLAN.md](PERF_PLAN.md)。下面仍是当时的量级估算。
 
 假设设备配置：游戏逻辑 640×480、RGB565、scale=1、面板 1280×720 RGB565 单缓冲、无 MIDI。
 
@@ -278,12 +281,12 @@ src/main.cc ──► content::loadData (Z.DAT, KDEF/TALK, WAR.*)
 | DPI / 面板 FB | 1.8 MB | PSRAM | 官方 BSP 已建；禁止再分配同等 RGBA |
 | 游戏 FB 640×480 RGB565 | 0.60 MB | PSRAM | nearest 放大到居中 960×720（1.5x，非整数）或 1x 黑边 |
 | 地图离屏 640×480 RGB565 | 0.60 MB | PSRAM | 不要 2 的幂 RGBA target |
-| 世界层数据 480²×5×2 | ~2.3 MB | PSRAM | 可按块从 SD 流，M2 先整图 |
+| 世界层数据 480²×5×2 | ~2.3 MB | PSRAM | 当时按整图估 |
 | 世界小地图全尺寸 ARGB | ~7.4 MB | — | **默认关掉或降采样**；`show_minimap` 可配 |
 | 图集 2×512×512 RGB565 | 1.0 MB | PSRAM | 替代 1024 ARGB 页 |
 | 字体 atlas（预生成） | 0.3–0.8 MB | PSRAM/Flash | host 做 |
 | 音频 PCM 缓冲 | 16–64 KB | 内部 SRAM 优先 | 48 kHz 立体声后置 |
-| ADLMIDI 实时 | 数百 KB + CPU | — | M4 不做 |
+| ADLMIDI 实时 | 数百 KB + CPU | — | 不做；BGM 预渲染 WAV |
 | C++ 堆 / fmt / toml | 0.5–2 MB | PSRAM | 需关 RTTI/例外或只在 host 用 toml |
 | ESP-IDF + BSP + FAT | Flash 1–2 MB | Flash | bring-up 远小于 10 MB factory |
 
@@ -293,7 +296,7 @@ src/main.cc ──► content::loadData (Z.DAT, KDEF/TALK, WAR.*)
 2. 内部 SRAM 被 DMA 描述符 / 任务栈 / FAT 吃光
 3. `std::filesystem` 扫盘 + 把整份 OTF / 整份 MMAP.GRP 常驻
 
-性能：RPG 30 fps。PPA 硬件缩放可以研究，但先正确（软件 nearest + 黑边）。
+性能目标：RPG 30 fps。后来 present 已交给 PPA，见 PERF_PLAN。
 
 ---
 
@@ -313,9 +316,9 @@ Registry 上 `m5stack_tab5_noglib` 1.3.0 的能力表仍只写 ili9881c+st7123�
 
 验证：
 
-1. M1 bring-up 自己在内部 I2C（G31/G32）probe `0x14` / `0x55` 并打日志（不替代 BSP）
-2. 授权刷机后看官方 BSP 的 `Discovered board version 3` 和测试 pattern
-3. 失败再用官方 `espressif/esp_lcd_st7121`。**禁止**从 Octoooo 拷 BSP，禁止手写过期 init
+1. bring-up 自己在内部 I2C（G31/G32）probe `0x14` / `0x55` 并打日志（不替代 BSP）
+2. 刷机后看官方 BSP 的板本探测和测试 pattern
+3. 失败再用官方 `espressif/esp_lcd_st7121`。禁止手写过期 init
 
 ### 风险 2 — 桌面 ARGB / 大缓存在 32 MB PSRAM 上「能塞下但会卡死」
 
@@ -323,7 +326,7 @@ Registry 上 `m5stack_tab5_noglib` 1.3.0 的能力表仍只写 ili9881c+st7123�
 
 验证：
 
-1. host 上对 `Texture::create*` / `GlobalMap` 分配打日志（M2 前先改 compatibility 层计数，不改玩法）
+1. host 上对 `Texture::create*` / `GlobalMap` 分配打日志（先改 compatibility 层计数，不改玩法）
 2. 设备 `heap_caps_get_free_size(MALLOC_CAP_SPIRAM/INTERNAL)` 每阶段打印
 3. 硬规则：不允许第二份 1280×720 RGBA；游戏 FB 用 RGB565
 
@@ -336,8 +339,8 @@ Registry 上 `m5stack_tab5_noglib` 1.3.0 的能力表仍只写 ili9881c+st7123�
 验证：
 
 1. `rg "SDL_|SDL2_gfx" src`（已做）：命中集中在 `app/sdl_input.cc`、`scene/window*.cc`、`scene/renderer.cc`、`scene/texture.cc`、`audio/mixer.cc`、`audio/channel*.cc`
-2. M2 先做 `Renderer`/`Texture`/`File` 的 Tab5 实现，跑 title / 一帧地图，不链 SDL
-3. 若 compatibility 层证明必须改玩法才能显示，再评估 Plan B（轻量 DOS 模拟）。**现在没有这个证据，不移植 DOSBox**
+2. 薄 SDL + 覆盖层已经能跑标题和地图，不链桌面 SDL
+3. 若当时证明必须改玩法才能显示，再评估 Plan B（轻量 DOS 模拟）。**没有这个证据，不移植 DOSBox**
 
 ---
 
@@ -349,4 +352,4 @@ Registry 上 `m5stack_tab5_noglib` 1.3.0 的能力表仍只写 ili9881c+st7123�
 - 已有 `InputEvent` 和固定步主循环
 - 主要工作是换 Video/Audio/FS/Font，而不是重写金庸规则
 
-Plan B 只在风险 2+3 的 PoC（M2 一帧）失败后才打开。
+第一帧已经出来，Plan B 仍不打开。
