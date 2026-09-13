@@ -4,9 +4,8 @@
 
 | 文件 | 角色 |
 |---|---|
-| [ARCHITECTURE.md](ARCHITECTURE.md) | 分层、Platform API、屏驱与工程边界 |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | 分层、Platform API、屏驱、覆盖层规则与工程边界 |
 | [UPSTREAM_ANALYSIS.md](UPSTREAM_ANALYSIS.md) | 立项时对 HeroesOfJinYong 的源码分层与 SDL 依赖；内存数字可能过期 |
-| [PORTING_PLAN.md](PORTING_PLAN.md) | 立项时的 M0–M5 拆分，**不是进度表** |
 | [HANDHELD_PORT_PLAYBOOK.md](HANDHELD_PORT_PLAYBOOK.md) | 对应、踩过的坑、新游戏移植复用规范 |
 | [PERF_PLAN.md](PERF_PLAN.md) | 性能账本、已落地的优化、明确不做的项 |
 | [../tools/host_test/README.md](../tools/host_test/README.md) | 本机无头测试台：不用设备跑移植自己的游戏逻辑 |

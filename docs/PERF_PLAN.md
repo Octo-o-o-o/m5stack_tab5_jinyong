@@ -198,7 +198,7 @@ battle                enterWar 成功，纹理 +0.66 MB，堆 +1.89 MB（有界�
 
 | 想过但不做 | 原因 |
 |---|---|
-| **CPU 360 → 400 MHz** | 查过 IDF：P4 rev < 3.0 要 `CONFIG_ESP_FORCE_400MHZ_ON_REV_LESS_V3`，文档写明只对 Espressif 另行认证过的芯片有效，否则「不稳定或可靠性下降」。本机 **rev v1.3**，不开 |
+| **CPU 360 → 400 MHz** | 查过 IDF：P4 rev < 3.0 要 `CONFIG_ESP_FORCE_400MHZ_ON_REV_LESS_V3`，文档写明只对 Espressif 另行认证过的芯片有效，否则「不稳定或可靠性下降」。Tab5 上的 P4 是 **rev v1.x**，不开 |
 | L2 cache 128 KB → 256/512 KB | 要从 576 KB DIRAM 再割 128/384 KB（静态已占 146 KB，hojy 任务栈 64 KB）。**没有真机 `heap_caps` 证据前不动**，改坏了是难查的 OOM。P1 之后 CPU 的 PSRAM 压力已大幅下降，收益也变小。配置行与回滚写在第 4 节 |
 | `SDL_RenderCopy` 也走 PPA | 两层地形之间夹着 `renderChar`，PPA blend 不能同时缩放；小纹理（文字）每次调用的 cache 同步开销反而更大 |
 | 后台缓冲双缓冲 + PPA 非阻塞 | 多 1.2 MB PSRAM 换约 5 ms 重叠，没有内存余量证据前不换 |
@@ -278,7 +278,7 @@ battle                enterWar 成功，纹理 +0.66 MB，堆 +1.89 MB（有界�
 **已在本机验证**
 - `idf.py build` 通过（IDF 5.5.5 / ESP32-P4），无新增告警；`tab5_jinyong.bin` 1 978 240 B（0x1e3180）。
 - DIRAM 静态 146 338 B / 576 464 B，剩 430 126 B（与改前 146 058 B 基本持平）。
-- 光栅等价性穷举：源坐标映射 9 409 6000 组全等、alpha 混合 3 932 160 组逐位相同（脚本见会话记录，不入库）。
+- 光栅等价性穷举：源坐标映射 9 409 6000 组全等、alpha 混合 3 932 160 组逐位相同（验证脚本未入库）。
 
 **必须上真机才算数（未验）**
 - **PPA 旋转方向**：`PPA_SRM_ROTATION_ANGLE_90` 是**逆时针**。按 CPU 路径的映射

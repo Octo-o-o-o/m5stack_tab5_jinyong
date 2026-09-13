@@ -1,0 +1,49 @@
+name: release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Check tag
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          if [[ ! "${TAG}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Release tags look like v1.2.3, got ${TAG}" >&2
+            exit 1
+          fi
+
+      # Full history so `git describe` stamps the tag into the firmware.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Fetch submodules
+        run: |
+          git submodule update --init third_party/HeroesOfJinYong
+          git -C third_party/HeroesOfJinYong submodule update --init deps/fmt
+
+      - name: Build and package
+        uses: espressif/esp-idf-ci-action@e6f5c74232b1ccd4c97ed641f1e48553853f1fd5 # v1.2.0
+        with:
+          esp_idf_version: v5.5.5
+          target: esp32p4
+          command: TAB5_FIRMWARE=game ./build.sh && TAB5_FIRMWARE=bringup ./build.sh && ./scripts/package_release.sh ${{ github.ref_name }} dist
+
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          ./scripts/release_notes.sh "${TAG}" > release-notes.md
+          gh release create "${TAG}" dist/* --verify-tag --title "${TAG}" --notes-file release-notes.md

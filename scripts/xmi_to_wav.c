@@ -1,3 +1,8 @@
+/*
+ * SPDX-FileCopyrightText: 2026 tab5_jinyong contributors
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
 /* Host-only: render AIL XMI to 16-bit stereo WAV via libADLMIDI (DosBox OPL). */
 #include "adlmidi.h"
 

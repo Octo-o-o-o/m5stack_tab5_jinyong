@@ -1,3 +1,9 @@
+/*
+ * SPDX-FileCopyrightText: 2021 Soar Qin <soarchin@gmail.com>
+ * SPDX-FileCopyrightText: 2026 tab5_jinyong contributors
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
 #include "warfield.hh"
 
 #include "colorpalette.hh"

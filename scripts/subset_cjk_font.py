@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# SPDX-FileCopyrightText: 2026 tab5_jinyong contributors
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 """Subset a CJK font to UI strings + XOR TALK.GRP + RANGER/WAR names.
 
 Output is gitignored. TALK.GRP is bitwise-not Big5; RANGER names and WAR.STA

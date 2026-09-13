@@ -19,7 +19,7 @@
 - 不烧 eFuse，不刷 C6，不用 Arduino
 - 不默认 16:9 / bilinear；第一版不做触摸虚拟键
 - 工具链钉死 ESP-IDF **v5.5.5**
-- 默认不刷机；需 `TAB5_ACCEPT_OVERWRITE_WORK_FIRMWARE=1`
+- 刷机前必须确认（`flash.sh` 交互确认，非交互需 `--yes`）
 
 ---
 
@@ -29,7 +29,7 @@
 
 ```
 DOS 原版数据（IDX/GRP/Z.DAT/XMI/WAV/Big5）
-        ↓ host：makedata / 字体子集 / 可选预渲染 BGM
+        ↓ host：makedata / 字体子集 / 预渲染 BGM
 HeroesOfJinYong gameplay/core（桌面 SDL2 + 大堆 + 瞬间 IO）
         ↓ 本仓：薄 SDL + Platform API + 覆盖层
 ESP32-P4 / Tab5（PSRAM 连续块、FatFS、MIPI-DSI DPI、I2C 键盘）
@@ -59,7 +59,7 @@ ESP32-P4 / Tab5（PSRAM 连续块、FatFS、MIPI-DSI DPI、I2C 键盘）
 | 整数倍放大即可 | 最大装下的 4:3：`960×720`，左右约各 160 px 黑边 |
 | 单窗口 FB | 允许第二份 **RGB565** DPI FB（约 1.8 MB）；禁止第二份 1280×720 **RGBA** |
 
-旋转约定（本机）：`landscape(lx,ly) → portrait(ly, land_w-1-lx)`。boot 字画在肖像坐标，游戏 present 按横握虚拟坐标再转。用户说「竖着两行 LOADING」不一定是转反了，先对崩溃日志。
+旋转约定（本机）：`landscape(lx,ly) → portrait(ly, land_w-1-lx)`。boot 字画在肖像坐标，游戏 present 按横握虚拟坐标再转。屏上「竖着两行 LOADING」不一定是转反了，先对崩溃日志。
 
 ### 1.3 输入对应
 
@@ -88,7 +88,6 @@ ESP32-P4 / Tab5（PSRAM 连续块、FatFS、MIPI-DSI DPI、I2C 键盘）
 /<game>/config.toml
 /<game>/data/                 # GRP/IDX/Z.DAT、GAME*.WAV
 /<game>/data/font/chinese.otf
-/<game>/fonts/chinese.otf     # 同一份字体的副本
 /<game>/save/
 ```
 
@@ -128,9 +127,9 @@ ESP32-P4 / Tab5（PSRAM 连续块、FatFS、MIPI-DSI DPI、I2C 键盘）
 
 ## 2. 做成的事（以后默认照做）
 
-### G-01 独立仓 + 覆盖层，不叉 core、不沾邻仓
+### G-01 独立仓 + 覆盖层，不叉 core
 
-CMake `FILTER EXCLUDE` 掉设备必须改的 `.cc`，再 `APPEND` 覆盖层。fmt 的 RISC-V 补丁拷到 build 目录改头文件，不改 submodule。upstream 警告用 `-w`，不为过编译去改玩法。
+覆盖层目录里的 `.cc` 按文件名替换 upstream 同名文件，CMake 自动排除原件。fmt 的 RISC-V 补丁拷到 build 目录改头文件，不改 submodule。upstream 警告用 `-w`，不为过编译去改玩法。
 
 ### G-02 先读 core 再估内存，再决定不走 DOSBox
 
@@ -150,11 +149,11 @@ Tab5 屏世代是 ILI9881C / ST7123 / ST7121。Registry README 能力表会过�
 
 ### G-06 host 预处理，设备只吃瘦数据
 
-Mac 上 `makedata` / 字体子集 / 可选 DosBox OPL 预渲染 `GAME##.WAV`。产物进 `local/`（gitignore），人拷 SD。固件保持小 factory。
+host 上 `makedata` / 字体子集 / DOSBox OPL 预渲染 `GAME##.WAV`，`prepare_game_data.sh` 一步做完。产物进 `local/`（gitignore），人拷 SD。固件保持小 factory。
 
-### G-07 默认拒刷 + 授权句 + 指定口
+### G-07 刷机先确认，只走芯片自己的 USB-JTAG
 
-无 `TAB5_ACCEPT_OVERWRITE_WORK_FIRMWARE=1` 时 `flash.sh` 退出码 2。本机口只认 USB JTAG（现场是 `/dev/cu.usbmodem1101`，`303A:1001`），不用看起来像串口的另一个 `usbmodem`。
+刷机等于替换设备上的现有固件。`flash.sh` 交互确认，非交互环境不带 `--yes` 直接退出码 2。刷写口是 ESP32-P4 的 USB-Serial-JTAG（`303A:1001`）。开发机上常同时插着别的 ESP 板子，而 esptool 只校验芯片型号，挡不住同型号的另一块板，所以没指定端口时 `flash.sh` 只在恰好一个 Espressif 设备时自动选用，多块就列出来拒绝。
 
 ### G-08 大块按「连续洞」调度，不按「总量还剩多少」
 
@@ -198,13 +197,13 @@ P4 rev &lt; v3：C++ 静态构造时高 DRAM 未就绪。大表进 `.rodata`，O
 
 ### G-18 诊断先于改码
 
-用户说「先检查每个可能点，确认真实存在再改」。现象（小方框、中间一块、缺字、闪一下）各自是不同层；不要用「转屏 / 再刷一次 / 加大缩放」包打天下。
+先检查每个可能点，确认真实存在再改。现象（小方框、中间一块、缺字、闪一下）各自是不同层；不要用「转屏 / 再刷一次 / 加大缩放」包打天下。
 
 ---
 
 ## 3. 踩过的坑
 
-写法：现象 → 当时容易错判 → 真因 → 处理 → 以后怎么防。编号与 skill `references/pitfalls.md` 对齐。
+写法：现象 → 当时容易错判 → 真因 → 处理 → 以后怎么防。
 
 ### P-01 开机淡蓝 → 黑 → 再亮 / LOADING 后重启
 
@@ -348,12 +347,12 @@ P4 rev &lt; v3：C++ 静态构造时高 DRAM 未就绪。大表进 `.rodata`，O
 处理：build 目录补丁 + `FMT_USE_CONSTEVAL=0`。  
 防：第三方桌面库默认当「要隔离的编译单元」。
 
-### P-20 从邻仓抄屏 init / 用错串口
+### P-20 从别的工程抄屏 init / 用错串口
 
-错判：那台 Tab5 已经点亮过，拷过来更快。  
-真因：邻仓分区、LVGL、Wi-Fi 会污染独立娱乐固件；错误 `usbmodem` 口会写到别的设备或写失败。  
+错判：别的固件已经点亮过这块屏，拷过来更快。  
+真因：别的工程带着自己的分区、LVGL、Wi-Fi，会污染独立的游戏固件；接错串口会写到别的设备或写失败。  
 处理：官方 registry BSP；刷写口用芯片 USB JTAG。  
-防：负向验收「本任务 git status 不得出现邻仓路径」。
+防：屏驱只从官方 BSP 来，不拷其它工程的 init 表。
 
 ### P-21 按方向键偶尔一下走好远
 
@@ -458,7 +457,7 @@ P4 rev &lt; v3：C++ 静态构造时高 DRAM 未就绪。大表进 `.rodata`，O
 ### P-40 覆盖了 `.cc`，又去动它的 `.hh`
 
 错判：覆盖层能整文件替换，那改个头文件里的常量也一样。  
-真因：引号包含按**包含者所在目录**优先解析，`hojy_core/` 里的头文件只对 `hojy_core/` 自己的 TU 生效。upstream 那些没被覆盖的 TU（`window_menu.cc`、`talkbox.cc` 等）仍然看到原版头文件——同一个类两份布局，链接器不报错，运行时随机崩。本轮两次撞到边上：给 `Window` 加辅助成员（改用捕获 `this` 的 lambda 绕开）、调 `InputRepeater` 的重复常量（改成写在覆盖的 `.cc` 里）。  
+真因：引号包含按**包含者所在目录**优先解析，`hojy_core/` 里的头文件只对 `hojy_core/` 自己的 TU 生效。upstream 那些没被覆盖的 TU（例如 `window_menu.cc`）仍然看到原版头文件——同一个类两份布局，链接器不报错，运行时随机崩。本轮两次撞到边上：给 `Window` 加辅助成员（改用捕获 `this` 的 lambda 绕开）、调 `InputRepeater` 的重复常量（改成写在覆盖的 `.cc` 里）。  
 防：**覆盖层只换 `.cc`**。要调的常量、要加的辅助函数写在覆盖的 `.cc` 里。确实要覆盖头文件时，先证明没有未覆盖的 TU 也包含它。现有的 `globalmap.hh` / `submap.hh` / `talkbox.hh` 覆盖属于已验证的例外，不是可以照抄的模式。
 
 ### P-41 调用方不看返回值，被调方就得自己喊
@@ -531,7 +530,7 @@ P4 rev &lt; v3：C++ 静态构造时高 DRAM 未就绪。大表进 `.rodata`，O
 
 ## 5. 新项目开工顺序
 
-1. 独立仓。写红线：不改邻仓、不提交原版资源、默认不刷机。
+1. 独立仓。写红线：不改上游、不提交原版资源、刷机前确认。
 2. 读 remake/core：主循环、像素格式、输入是否已有抽象、哪些库能留在 host。
 3. 列大块表：每张大纹理、每份整包资源、每条 BGM、静态表、任务栈。标「连续还是总量」。
 4. 画三层对应：数据 / core / platform。标桌面没有、设备必须补的体验（loading、绝对路径、停曲复活）。
@@ -541,8 +540,6 @@ P4 rev &lt; v3：C++ 静态构造时高 DRAM 未就绪。大表进 `.rodata`，O
 8. host 预处理：数据转换、字体按**运行时编码**子集、可选预渲染音频。
 9. 验收拆成固件 / 卡数据 / 看屏。缺哪一层就说哪一层，不把 flash 成功写成可玩。
 
-检查清单的 agent 版见 skill `references/new-project-checklist.md`。
-
 ---
 
 ## 6. 验收纪律
@@ -550,7 +547,7 @@ P4 rev &lt; v3：C++ 静态构造时高 DRAM 未就绪。大表进 `.rodata`，O
 - 编译成功 ≠ 能玩。刷机成功 ≠ 颜色对、键能用、能开局。
 - 本机日志不能代替用户看屏。用户照片是现象，根因仍要串口 + 堆信息。
 - `heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM)` 与 `free_size` 一起看。
-- 改像素格式、键盘热插拔、EFT 条数、`llroundl`、`chdir`、确认菜单跳过、extra-slot 之前，先证明与现场症状有关。本项目这些点在修完后默认冻结，除非新授权。
+- 改像素格式、键盘热插拔、EFT 条数、`llroundl`、`chdir`、确认菜单跳过、extra-slot 之前，先证明与现场症状有关。本项目这些点修完后默认不再动，除非有新的现场证据。
 - 未运行的测试、未拷卡的字体、未看屏的流畅度，分别写「未验」。
 
 ---
@@ -561,4 +558,4 @@ P4 rev &lt; v3：C++ 静态构造时高 DRAM 未就绪。大表进 `.rodata`，O
 - 为「更像桌面」开 HighDPI、IME、bilinear、全尺寸小地图
 - 为「更流畅」上 720p RGBA 交换链或 PPA，在颜色/比例/开局还没稳之前
 - 把 Wi-Fi、个人绝对路径、secret 写进会提交的文件
-- 在授权句之外刷机，或刷 C6 / 烧 eFuse
+- 未确认就刷机，或刷 C6 / 烧 eFuse

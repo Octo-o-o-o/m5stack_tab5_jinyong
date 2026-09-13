@@ -1,4 +1,9 @@
 /*
+ * SPDX-FileCopyrightText: 2026 tab5_jinyong contributors
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
+/*
  * Host test of the Tab5 port's own logic (hojy_core overlays + upstream),
  * driven headlessly against the real SD-card data. Reports whether walking out
  * of the starting submap actually switches to the world map, and how much

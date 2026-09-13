@@ -1,0 +1,22 @@
+version = 1
+SPDX-PackageName = "tab5_jinyong"
+SPDX-PackageSupplier = "tab5_jinyong contributors"
+SPDX-PackageDownloadLocation = "https://github.com/Octo-o-o-o/m5stack_tab5_jinyong"
+
+# Documentation, configuration and generated files that have no room for an
+# inline SPDX header. Source files carry their own.
+[[annotations]]
+path = [
+    "**.md",
+    "**.csv",
+    "**.yml",
+    "**.lock",
+    "**sdkconfig.defaults",
+    ".editorconfig",
+    ".gitattributes",
+    ".gitignore",
+    ".gitmodules",
+]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 tab5_jinyong contributors"
+SPDX-License-Identifier = "GPL-3.0-or-later"

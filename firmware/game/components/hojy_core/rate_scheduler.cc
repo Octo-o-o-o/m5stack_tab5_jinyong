@@ -1,4 +1,10 @@
 /*
+ * SPDX-FileCopyrightText: 2021 Soar Qin <soarchin@gmail.com>
+ * SPDX-FileCopyrightText: 2026 tab5_jinyong contributors
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
+/*
  * Overlay of HeroesOfJinYong src/app/rate_scheduler.cc.
  * Upstream uses long double + std::llround, which on ESP32-P4 newlib
  * enters llroundl and recurses until the hojy task stack canary trips.

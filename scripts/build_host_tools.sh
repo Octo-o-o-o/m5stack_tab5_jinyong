@@ -1,12 +1,15 @@
 #!/usr/bin/env bash
-# Build makedata/mergepic with the host clang++, without configuring the
-# full HOJY desktop target (that needs SDL2).
+# SPDX-FileCopyrightText: 2026 tab5_jinyong contributors
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# Build upstream's makedata with the host compiler, without configuring the
+# full desktop target (that needs SDL2). Output: local/host/bin/makedata.
 
 set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
 hojy="${root}/third_party/HeroesOfJinYong"
-out="${root}/host/build"
+out="${root}/local/host"
 gen="${out}/generated"
 bin="${out}/bin"
 
@@ -35,17 +38,9 @@ gen.joinpath("makedata_assets.hh").write_text(header, encoding="utf-8")
 print("wrote", gen / "makedata_assets.hh")
 PY
 
-cxx="${CXX:-c++}"
-common=(-std=c++17 -O2 -I "${hojy}/src" -I "${gen}" -Dftello64=ftello -Dfseeko64=fseeko)
-
-"${cxx}" "${common[@]}" \
+"${CXX:-c++}" -std=c++17 -O2 -I "${hojy}/src" -I "${gen}" -Dftello64=ftello -Dfseeko64=fseeko \
     "${hojy}/src/tools/makedata.cc" \
     "${hojy}/src/content/atomic_file.cc" \
     -o "${bin}/makedata"
 
-"${cxx}" "${common[@]}" \
-    "${hojy}/src/tools/mergepic.cc" \
-    "${hojy}/src/util/file.cc" \
-    -o "${bin}/mergepic"
-
-echo "Host tools: ${bin}/makedata ${bin}/mergepic"
+echo "Host tool: ${bin}/makedata"

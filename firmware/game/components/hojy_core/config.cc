@@ -1,4 +1,29 @@
 /*
+ * SPDX-FileCopyrightText: 2021 Soar Qin <soarchin@gmail.com>
+ * SPDX-FileCopyrightText: 2026 tab5_jinyong contributors
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
+/*
+ * Heroes of Jin Yong.
+ * A reimplementation of the DOS game `The legend of Jin Yong Heroes`.
+ * Copyright (C) 2021, Soar Qin<soarchin@gmail.com>
+
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+/*
  * Overlay of HeroesOfJinYong src/core/config.cc for ESP32-P4.
  * If config.toml has no pre_path, prefix every game path with the SD root.
  * Gameplay config keys are unchanged.
@@ -17,10 +42,6 @@
 #include <external/toml.hpp>
 #include <fmt/format.h>
 #include <fstream>
-
-#ifndef HOJY_TAB5_GAME_ROOT
-#define HOJY_TAB5_GAME_ROOT "/sdcard/jinyong"
-#endif
 
 namespace hojy::core {
 
@@ -48,7 +69,7 @@ bool Config::load(const std::string &filename) {
     if (main) {
         prePath_ = main["pre_path"].value_or(std::move(prePath_));
         if (prePath_.empty()) {
-            prePath_ = HOJY_TAB5_GAME_ROOT "/";
+            prePath_ = TAB5_SD_GAME_ROOT "/";
         }
         auto dpath = main["data_path"];
         if (dpath.is_string()) {

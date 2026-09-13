@@ -1,3 +1,8 @@
+/*
+ * SPDX-FileCopyrightText: 2026 tab5_jinyong contributors
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
 #include "fallback_ui.h"
 #include "tab5_platform.h"
 
@@ -11,6 +16,13 @@
 #include <exception>
 
 extern int main(int argc, char **argv);
+
+[[noreturn]] static void halt()
+{
+    for (;;) {
+        vTaskDelay(portMAX_DELAY);
+    }
+}
 
 static void game_task(void *)
 {
@@ -40,17 +52,11 @@ static void game_task(void *)
     if (reason[0] != '\0') {
         tab5_log_memory("hojy_main_threw");
         fallback_show("GAME STOPPED", reason, "POWER CYCLE TO RESTART");
-        for (;;) {
-            tab5_input_poll(nullptr, 0);
-            vTaskDelay(pdMS_TO_TICKS(50));
-        }
+        halt();
     }
     ESP_LOGE(TAB5_TAG, "hojy main returned %d", rc);
     fallback_show("HOJY MAIN EXITED", "CHECK UART FOR MISSING FILES", "INSERT PREPARED /JINYONG");
-    for (;;) {
-        tab5_input_poll(nullptr, 0);
-        vTaskDelay(pdMS_TO_TICKS(50));
-    }
+    halt();
 }
 
 extern "C" void app_main(void)
@@ -81,6 +87,7 @@ extern "C" void app_main(void)
         ESP_LOGW(TAB5_TAG, "no prepared game on SD at %s", TAB5_SD_GAME_ROOT);
         fallback_show("NO GAME DATA ON SD", "COPY PREPARED TREE TO /JINYONG",
                       "THEN REBOOT");
+        /* Keep logging keys so the keyboard can still be checked without a card. */
         for (;;) {
             tab5_hid_event_t ev[4];
             const int n = tab5_input_poll(ev, 4);
@@ -95,9 +102,7 @@ extern "C" void app_main(void)
 
     if (tab5_fs_chdir_game() != ESP_OK) {
         fallback_show("CHDIR /JINYONG FAILED", nullptr, nullptr);
-        for (;;) {
-            vTaskDelay(pdMS_TO_TICKS(1000));
-        }
+        halt();
     }
 
     /* ESP-IDF xTaskCreate stack depth is in bytes. */

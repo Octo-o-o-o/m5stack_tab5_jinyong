@@ -1,4 +1,10 @@
 /*
+ * SPDX-FileCopyrightText: 2021 Soar Qin <soarchin@gmail.com>
+ * SPDX-FileCopyrightText: 2026 tab5_jinyong contributors
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
+/*
  * Overlay of HeroesOfJinYong src/scene/window_audio.cc for ESP32-P4.
  *
  * A BGM track in this data set is a ~3.97 MB 22 kHz stereo WAV. Upstream loads

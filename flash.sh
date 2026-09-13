@@ -1,36 +1,56 @@
 #!/usr/bin/env bash
-# Flash overwrites whatever firmware is already on the Tab5.
-# Require an explicit env var so a stray ./flash.sh cannot do that.
+# SPDX-FileCopyrightText: 2026 tab5_jinyong contributors
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# Flash the Tab5 firmware (game by default, TAB5_FIRMWARE=bringup for the
+# self-test). This replaces whatever firmware is on the device, so it asks.
+#
+#   ./flash.sh [-y|--yes] [PORT]
+#
+# PORT falls back to $ESPPORT, then to the one connected Espressif USB device;
+# with several connected it refuses rather than guess.
 
 set -euo pipefail
 
 root="$(cd "$(dirname "$0")" && pwd)"
-proj="${root}/firmware/${TAB5_FIRMWARE:-game}"
-port="${ESPPORT:-/dev/cu.usbmodem1101}"
+target="${TAB5_FIRMWARE:-game}"
+proj="${root}/firmware/${target}"
+port="${ESPPORT:-}"
+assume_yes=0
 
-if [[ "${TAB5_ACCEPT_OVERWRITE_WORK_FIRMWARE:-}" != "1" ]]; then
-    cat <<'EOF' >&2
-Refusing to flash.
+for arg in "$@"; do
+    case "${arg}" in
+        -y|--yes) assume_yes=1 ;;
+        -h|--help) sed -n '2,8s/^# \{0,1\}//p' "$0"; exit 0 ;;
+        -*) echo "Unknown option: ${arg}" >&2; exit 2 ;;
+        *) port="${arg}" ;;
+    esac
+done
 
-This replaces the firmware currently on the Tab5. Re-run with:
+if [[ ! -d "${proj}" ]]; then
+    echo "Unknown firmware target: ${target} (${proj})" >&2
+    exit 1
+fi
 
-  TAB5_ACCEPT_OVERWRITE_WORK_FIRMWARE=1 ESPPORT=/dev/cu.usbmodem1101 ./flash.sh
-
-On Linux the port is often /dev/ttyACM0. Use the Espressif USB-JTAG
-device (USB VID:PID 303A:1001). Do not use a different usbmodem that
-is not 303A:1001. Do not flash the ESP32-C6. Do not burn eFuse.
-EOF
+if (( ! assume_yes )) && [[ ! -t 0 ]]; then
+    echo "Refusing to flash non-interactively without --yes." >&2
     exit 2
 fi
 
-if [[ "${port}" == "/dev/cu.usbmodem01" ]]; then
-    echo "Refusing port /dev/cu.usbmodem01" >&2
-    exit 2
-fi
-
-# shellcheck disable=SC1091
+# shellcheck source=scripts/idf_env.sh
 . "${root}/scripts/idf_env.sh"
 
+if [[ -z "${port}" ]]; then
+    port="$("${root}/scripts/select_port.sh")"
+fi
+
+if (( ! assume_yes )); then
+    read -r -p "Replace the firmware on the Tab5 at ${port} with '${target}'? [y/N] " reply
+    if [[ "${reply}" != [yY]* ]]; then
+        echo "Aborted." >&2
+        exit 1
+    fi
+fi
+
 cd "${proj}"
-export ESPPORT="${port}"
 idf.py -p "${port}" flash

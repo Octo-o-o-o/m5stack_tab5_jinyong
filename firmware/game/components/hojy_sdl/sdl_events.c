@@ -1,3 +1,8 @@
+/*
+ * SPDX-FileCopyrightText: 2026 tab5_jinyong contributors
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
 #include "sdl_internal.h"
 
 #include "esp_log.h"

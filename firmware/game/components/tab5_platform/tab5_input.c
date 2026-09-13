@@ -1,3 +1,8 @@
+/*
+ * SPDX-FileCopyrightText: 2026 tab5_jinyong contributors
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
 #include "tab5_platform.h"
 
 #include "driver/gpio.h"

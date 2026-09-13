@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# SPDX-FileCopyrightText: 2026 tab5_jinyong contributors
+# SPDX-License-Identifier: GPL-3.0-or-later
 #
 # Headless host test of the Tab5 port's own game logic.
 #
@@ -24,7 +26,7 @@ REPO="$(cd "$HERE/../.." && pwd)"
 GAME_ROOT="${1:-$REPO/local/sd_image/jinyong}"
 WORK="${HOST_TEST_WORK:-${TMPDIR:-/tmp}/tab5_jinyong_hosttest}"
 SDL_PREFIX="${SDL2_PREFIX:-$(brew --prefix sdl2-compat 2>/dev/null || brew --prefix sdl2 2>/dev/null || echo /usr/local)}"
-CMAKE="$(bash "$REPO/scripts/find_host_cmake.sh")"
+CMAKE="$(bash "$REPO/scripts/find_host_cmake.sh" || true)"
 
 [ -d "$GAME_ROOT/data" ] || { echo "no data/ under $GAME_ROOT" >&2; exit 2; }
 [ -n "$CMAKE" ] || { echo "no cmake found" >&2; exit 2; }
@@ -69,20 +71,24 @@ fi
 # -------------------------------------------------- port logic + test compile
 SRC="$SRCCOPY/src"
 OV="$REPO/firmware/game/components/hojy_core"
-OVERLAYS=$(cd "$OV" && ls *.cc | grep -v '^main\.cc$')
+# Same rule as hojy_core/CMakeLists.txt: an overlay replaces the upstream file
+# with the same name. main.cc is the firmware entry; porttest.cc has its own.
+OVERLAYS=()
+for f in "$OV"/*.cc; do
+    [ "$(basename "$f")" = "main.cc" ] || OVERLAYS+=("$(basename "$f")")
+done
 
 srcs=()
 for d in app audio battle content core event scene util world; do
     for f in "$SRC/$d"/*.cc; do
         b=$(basename "$f"); skip=0
-        for o in $OVERLAYS; do [ "$b" = "$o" ] && skip=1; done
-        [ "$b" = "channelmidi.cc" ] && skip=1   # replaced by channelmidi_stub.cc
+        for o in "${OVERLAYS[@]}"; do [ "$b" = "$o" ] && skip=1; done
         [ $skip -eq 0 ] && srcs+=("$f")
     done
 done
-for o in $OVERLAYS; do srcs+=("$OV/$o"); done
+for o in "${OVERLAYS[@]}"; do srcs+=("$OV/$o"); done
 
-echo "== compiling ${#srcs[@]} sources (${OVERLAYS//$'\n'/ } overlaid) =="
+echo "== compiling ${#srcs[@]} sources (${OVERLAYS[*]} overlaid) =="
 c++ -std=c++17 -O1 -g -fexceptions -frtti -w \
     -Dftello64=ftello -Dfseeko64=fseeko -DALLOW_ODD_WIDTH -DHOJY_VERSION='"host-test"' \
     -I"$HERE/shim" -I"$OV" -I"$SRC" -I"$SRC/app" -I"$SRC/audio" -I"$SRC/battle" \
@@ -103,7 +109,7 @@ data_path = ["data"]
 music_path = "data"
 sound_path = "data"
 save_path = "save"
-fonts = "fonts/chinese.otf"
+fonts = "data/font/chinese.otf"
 ship_logic_enabled = true
 
 [window]
@@ -132,7 +138,7 @@ sound_volume = 0
 EOF
 
 echo "== generating the walk path from the real map data =="
-PATH_OUT="$RUN/walkpath.txt" /usr/bin/python3 "$HERE/probe_reach.py" "$GAME_ROOT" | tail -4
+PATH_OUT="$RUN/walkpath.txt" python3 "$HERE/probe_reach.py" "$GAME_ROOT" | tail -4
 
 # Keep the slot-1 files the previous run left on the card: porttest reads that
 # slot back, writes it out again, and the two must be byte for byte the same.

@@ -1,3 +1,8 @@
+/*
+ * SPDX-FileCopyrightText: 2026 tab5_jinyong contributors
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
 #include "tab5_platform.h"
 
 #include "bsp/display.h"
@@ -11,9 +16,6 @@
 #include "freertos/semphr.h"
 
 #include <string.h>
-
-#define RGB565(r, g, b) \
-    (uint16_t)((((r) & 0xF8) << 8) | (((g) & 0xFC) << 3) | (((b) & 0xF8) >> 3))
 
 static esp_lcd_panel_handle_t s_panel;
 static int s_width;
@@ -267,30 +269,20 @@ esp_err_t tab5_video_start(void)
     /* Black, not a tinted background: this is the only non-black fill in the
      * firmware, so any frame buffer still holding it shows up as a coloured
      * flash if it ever reaches the panel again during a transition. */
-    tab5_video_fill_rgb565(RGB565(0, 0, 0));
+    tab5_video_fill_rgb565(TAB5_RGB565(0, 0, 0));
     /* Boot text on the scanned buffer (fb0). */
     if (s_fb_count >= 2) {
         s_draw_i = 0;
     }
-    tab5_video_draw_text(24, 80, "TAB5 JINYONG", RGB565(255, 220, 80));
-    tab5_video_draw_text(24, 120, "LOADING", RGB565(220, 220, 220));
-    tab5_video_draw_text(24, 160, "HOLD SIDEWAYS TO PLAY", RGB565(160, 180, 200));
+    tab5_video_draw_text(24, 80, "TAB5 JINYONG", TAB5_RGB565(255, 220, 80));
+    tab5_video_draw_text(24, 120, "LOADING", TAB5_RGB565(220, 220, 220));
+    tab5_video_draw_text(24, 160, "HOLD SIDEWAYS TO PLAY", TAB5_RGB565(160, 180, 200));
     if (s_fb_count >= 2) {
         s_draw_i = 1;
     }
     ESP_LOGI(TAB5_TAG, "display started via official BSP (%dx%d RGB565) fbs=%d",
              s_width, s_height, s_fb_count);
     return ESP_OK;
-}
-
-int tab5_video_panel_width(void)
-{
-    return s_width;
-}
-
-int tab5_video_panel_height(void)
-{
-    return s_height;
 }
 
 void tab5_video_fill_rgb565(uint16_t color)
@@ -346,7 +338,7 @@ void tab5_video_draw_text(int x, int y, const char *text, uint16_t color)
 
 static inline uint16_t argb_to_rgb565(uint32_t p)
 {
-    return RGB565((uint8_t)(p >> 16), (uint8_t)(p >> 8), (uint8_t)p);
+    return TAB5_RGB565((uint8_t)(p >> 16), (uint8_t)(p >> 8), (uint8_t)p);
 }
 
 /*
@@ -531,7 +523,7 @@ void tab5_video_present_argb(const uint32_t *src, int width, int height)
 
     static int last_w, last_h, last_dw, last_dh;
     if (last_w != width || last_h != height || last_dw != dest_w || last_dh != dest_h) {
-        tab5_video_fill_rgb565(RGB565(0, 0, 0));
+        tab5_video_fill_rgb565(TAB5_RGB565(0, 0, 0));
         last_w = width;
         last_h = height;
         last_dw = dest_w;

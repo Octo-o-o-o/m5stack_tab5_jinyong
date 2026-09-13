@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 安全漏洞 / Security vulnerability
+    url: https://github.com/Octo-o-o-o/m5stack_tab5_jinyong/security/advisories/new
+    about: 请私密报告，不要开公开 issue

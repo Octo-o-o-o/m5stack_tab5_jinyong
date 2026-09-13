@@ -3,7 +3,7 @@
 本仓是独立的 Tab5 游戏固件：独占 MIPI-DSI、PSRAM framebuffer 和主循环。
 
 ```
-原游戏数据  --(Mac makedata/mergepic)-->  SD /jinyong/
+原游戏数据  --(host: makedata / 字体子集 / BGM 预渲染)-->  SD /jinyong/
                                               │
                                               ▼
                  HeroesOfJinYong gameplay/core
@@ -12,7 +12,7 @@
                               Platform API（本仓实现）
                      Video  Input  Audio  FS  Timing  Log
                                               │
-                              platform/tab5 + ESP-IDF 5.5.5
+                              tab5_platform + ESP-IDF 5.5.5
                                               │
                                          M5Stack Tab5
 ```
@@ -23,25 +23,26 @@
 
 ## 1. 仓库地图
 
-当前能做什么见仓库根 README，不要按旧的 M0–M5 阶段读这张表。
+当前能做什么见仓库根 README。
 
 | 路径 | 作用 |
 |---|---|
 | `third_party/HeroesOfJinYong/` | submodule，SHA 见 `UPSTREAM_ANALYSIS.md` |
+| `firmware/game/` | 游戏固件：HOJY core + 覆盖层 + 自写 SDL 薄层 + 官方 BSP |
+| `firmware/game/components/tab5_platform/` | 平台层；公开 C API 在 `include/tab5_platform.h` |
+| `firmware/bringup/` | 独立 ESP-IDF 工程：屏 / I2C 键盘 / SD / 喇叭自检，不是游戏 |
+| `tools/host_test/` | macOS 上的无头测试台 |
+| `scripts/` | IDF 环境、host 工具构建、字体子集、BGM 预渲染 |
 | `docs/` | 架构 / 上游分析 / 性能账本 / 踩坑手册 |
-| `firmware/bringup/` | 独立 ESP-IDF 工程：屏 / I2C 键盘 / SD 自检，不是游戏 |
-| `firmware/game/` | 游戏固件：HOJY core + 自写 SDL 薄层 + 官方 BSP |
-| `platform/tab5/` | 公开 C API 头（`tab5_platform.h`）；实现在 `firmware/game/components/tab5_platform/` |
-| `host/` | `makedata` / `mergepic` 的本机构建树（gitignore） |
-| `tools/` | host 预处理与无头测试台 |
-| `scripts/` | 不写死别人机器路径的 IDF / 字体 / 音频 helper |
-| `local/` | 永不提交：游戏数据、SD 镜像、本机产物 |
+| `.github/workflows/` | CI（编译两个固件、检查脚本与许可证标注）；推送 `v*` tag 时发布预编译固件 |
+| `LICENSES/`、`REUSE.toml` | 许可证全文与 REUSE 标注；第三方组件见根目录 `THIRD_PARTY_NOTICES.md` |
+| `local/` | 永不提交：SD 镜像、host 工具、Python venv |
 
 ---
 
 ## 2. Platform API（core 只看见这些）
 
-头文件在 `platform/tab5/tab5_platform.h`。HOJY scene 仍 `#include <SDL.h>`；设备上这是本仓 `firmware/game/components/hojy_sdl`，不是桌面 SDL2。I2C HID 在 `SDL_PollEvent` 里译成 `SDL_KEYDOWN/UP`，再进已有 `SdlInputCollector` → `InputAction`。
+头文件在 `firmware/game/components/tab5_platform/include/tab5_platform.h`。HOJY scene 仍 `#include <SDL.h>`；设备上这是本仓 `firmware/game/components/hojy_sdl`，不是桌面 SDL2。I2C HID 在 `SDL_PollEvent` 里译成 `SDL_KEYDOWN/UP`，再进已有 `SdlInputCollector` → `InputAction`。
 
 ```
 Game Core
@@ -102,8 +103,9 @@ HeroesOfJinYong Renderer / Texture
 Tab5 Keyboard MCU (STM32 @ I2C 0x6D)
         │  独立总线 G0/G1，不要用 BSP 内部 G31/G32
         ▼
-platform/tab5 InputCollector
-        │  译成 InputAction
+tab5_platform（tab5_input.c：HID 包、INT 引脚、热插拔重探）
+        ▼
+hojy_sdl（sdl_events.c：SDL_KEYDOWN/UP、repeat 标记、ASCII TEXTINPUT）
         ▼
 hojy::app::InputQueue  （upstream 已有）
         ▼
@@ -135,11 +137,10 @@ bring-up 默认设 HID mode，把 I2C HID 包打到串口。这仍然不是 USB 
   config.toml
   data/                 makedata 产物；BGM 的 GAMExx.WAV 也放这里
   data/font/chinese.otf 子集字体
-  fonts/chinese.otf     同一份字体的副本
   save/                 R/S/D + IDX/GRP
 ```
 
-固件读 `/sdcard/jinyong/config.toml`。存档语义跟 upstream：`SaveData::save/load`，设备上改成边序列化边落盘，不改 slot 文件名。
+固件读 `/sdcard/jinyong/config.toml`。`config.toml` 指的字体读不到时，依次回退到 `fonts/chinese.otf`、`data/font/chinese.otf`。存档语义跟 upstream：`SaveData::save/load`，设备上改成边序列化边落盘，不改 slot 文件名。
 
 ---
 
@@ -158,8 +159,27 @@ bring-up 默认设 HID mode，把 I2C HID 包打到串口。这仍然不是 USB 
 
 ---
 
-## 7. 工程边界
+## 7. 覆盖层
+
+`firmware/game/components/hojy_core/` 里的每个 `.cc` 按**文件名**替换 upstream `src/<module>/` 下的同名文件，其余 upstream 源文件原样编译。规则写在该目录的 `CMakeLists.txt`，测试台 `tools/host_test/run.sh` 用同一规则。新增或删除覆盖层后要 `idf.py reconfigure`。
+
+- 派生自 upstream 的文件保留原作者的版权声明，改动处写明原因
+- 只覆盖 `.cc`；`globalmap.hh` / `submap.hh` / `talkbox.hh` 是核实过不破坏其它 TU 的例外（见 Playbook P-40）
+- 覆盖层是 upstream 文件的拷贝加改动，继承了同样的告警，所以整个组件以 `-w` 编译
+
+升级 submodule 时，先看被覆盖的文件在上游改了什么，再逐个合进覆盖层：
+
+```bash
+old=$(git rev-parse HEAD:third_party/HeroesOfJinYong)   # 升级前记下
+# ……把 submodule 切到新版本之后：
+git -C third_party/HeroesOfJinYong diff --stat "$old" HEAD -- \
+  $(cd firmware/game/components/hojy_core && for f in *.cc *.hh; do printf ':(glob)**/%s ' "$f"; done)
+```
+
+---
+
+## 8. 工程边界
 
 - 官方组件从 Espressif registry 拉，不 `override_path` 到其它仓库
 - 无 Wi-Fi、不刷 ESP32-C6、不烧 eFuse
-- `flash.sh` 默认拒绝，需 `TAB5_ACCEPT_OVERWRITE_WORK_FIRMWARE=1`
+- `flash.sh` 刷写前要求确认，非交互环境需 `--yes`

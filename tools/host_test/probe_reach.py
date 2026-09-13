@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# SPDX-FileCopyrightText: 2026 tab5_jinyong contributors
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 """Flood-fill the starting submap with SubMap::tryMove's exact blocking rule."""
 import struct, sys, pathlib
 from collections import deque

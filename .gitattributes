@@ -1,0 +1,6 @@
+* text=auto eol=lf
+
+*.bin binary
+
+# Written by the ESP-IDF component manager.
+**/dependencies.lock linguist-generated=true

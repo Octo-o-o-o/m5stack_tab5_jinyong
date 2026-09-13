@@ -1,4 +1,10 @@
 /*
+ * SPDX-FileCopyrightText: 2021 Soar Qin <soarchin@gmail.com>
+ * SPDX-FileCopyrightText: 2026 tab5_jinyong contributors
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
+/*
  * Heroes of Jin Yong.
  * A reimplementation of the DOS game `The legend of Jin Yong Heroes`.
  * Copyright (C) 2021, Soar Qin<soarchin@gmail.com>

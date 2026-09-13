@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# SPDX-FileCopyrightText: 2026 tab5_jinyong contributors
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 """Replay SubMap::load + SubMap::tryMove exit checks against the real card data.
 
 Layouts taken from the sources this firmware compiles:
@@ -9,7 +12,7 @@ Layouts taken from the sources this firmware compiles:
 """
 import struct, sys, pathlib
 
-ROOT = pathlib.Path(sys.argv[1] if len(sys.argv) > 1 else "/Volumes/NO NAME/jinyong")
+ROOT = pathlib.Path(sys.argv[1] if len(sys.argv) > 1 else "local/sd_image/jinyong")
 DATA = ROOT / "data"
 W = H = 64
 LAYERS = 6

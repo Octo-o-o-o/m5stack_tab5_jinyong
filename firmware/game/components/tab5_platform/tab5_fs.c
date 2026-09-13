@@ -1,3 +1,8 @@
+/*
+ * SPDX-FileCopyrightText: 2026 tab5_jinyong contributors
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
 #include "tab5_platform.h"
 
 #include "bsp/m5stack_tab5.h"
@@ -42,11 +47,6 @@ esp_err_t tab5_fs_start(void)
                  TAB5_SD_GAME_ROOT, strerror(errno));
     }
     return ESP_OK;
-}
-
-bool tab5_fs_ready(void)
-{
-    return s_mounted;
 }
 
 bool tab5_fs_has_game(void)

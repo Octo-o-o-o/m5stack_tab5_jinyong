@@ -155,7 +155,7 @@ struct InputEvent {
 ```
 
 `SdlInputCollector` 只是把 `SDL_SCANCODE_*` / 手柄按钮映射进这个队列，并做按住连发（`InputRepeater`）。  
-core **不准**吃 I2C 或 USB HID scancode；Tab5 Keyboard 的 I2C HID 包要在 `platform/tab5` 译成 `InputAction`。
+core **不准**吃 I2C 或 USB HID scancode；Tab5 Keyboard 的 I2C HID 包要在平台层（`tab5_platform` + `hojy_sdl`）译成 `InputAction`。
 
 键盘映射（桌面）：方向、小键盘、Enter=Accept、Esc/Delete=Cancel、Space、Backspace。  
 第一版 Tab5 **不做触摸虚拟键**。USB-A Host 外接键盘是第二阶段。
@@ -206,7 +206,7 @@ core **不准**吃 I2C 或 USB HID scancode；Tab5 Keyboard 的 I2C HID 包要�
 
 `ResourceMgr::init` 的 `dataFiles`：`strings.toml`、`ALLDEF`/`ALLSIN`/`RANGER` 的 IDX+GRP、`BUILDING/BUILDX/BUILDY/EARTH/SURFACE.002`、`CLOUD`、`DEAD.BIG`、`EFT`、`ENDCOL/ENDWORD/KEND`、`HDGRP`、`KDEF`、`MMAP.COL/GRP/IDX`、`TALK`、`TITLE.BIG/GRP/IDX`、`WAR.STA`、`WARFLD`、`Z.DAT`。
 
-可选但游戏期望存在：合并后的 `SDX`/`SMP`/`WDX`/`WMP`（`makedata`/`mergepic` 在 Mac 上做）。音乐/音效缺了只进 `missingFilesOpt_`，不阻止启动。
+可选但游戏期望存在：合并后的 `SDX`/`SMP`/`WDX`/`WMP`（`makedata` 在 host 上合并）。音乐/音效缺了只进 `missingFilesOpt_`，不阻止启动。
 
 ### 5.2 存档
 
@@ -228,7 +228,6 @@ core **不准**吃 I2C 或 USB HID scancode；Tab5 Keyboard 的 I2C HID 包要�
 /jinyong/config.toml
 /jinyong/data/                 # makedata 产物；BGM 的 GAME*.WAV 也在这里
 /jinyong/data/font/chinese.otf
-/jinyong/fonts/chinese.otf
 /jinyong/save/
 ```
 
@@ -302,9 +301,9 @@ src/main.cc ──► content::loadData (Z.DAT, KDEF/TALK, WAR.*)
 
 ## 8. native port 最大三个风险（及验证）
 
-### 风险 1 — 本机 ST7121 必须靠官方 BSP 运行时探测，README 能力表是过期的
+### 风险 1 — ST7121 批次必须靠官方 BSP 运行时探测，README 能力表是过期的
 
-M5Stack 文档：2025-10-14 ILI9881C+GT911 → ST7123；**2026-04-28 ST7123 → ST7121**。本机机身是 ST7121。
+M5Stack 文档：2025-10-14 ILI9881C+GT911 → ST7123；**2026-04-28 ST7123 → ST7121**。开发用的这台是 ST7121。
 
 Registry 上 `m5stack_tab5_noglib` 1.3.0 的能力表仍只写 ili9881c+st7123。  
 **实际下载的源码已经支持 ST7121**（`managed_components/espressif__m5stack_tab5_noglib/src/bsp_display.c`）：

@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# SPDX-FileCopyrightText: 2026 tab5_jinyong contributors
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 """Rewrite HOJY config.toml window/ui/audio for Tab5. Does not touch game binaries."""
 
 from __future__ import annotations

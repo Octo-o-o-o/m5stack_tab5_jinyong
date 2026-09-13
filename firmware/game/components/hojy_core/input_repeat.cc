@@ -1,4 +1,10 @@
 /*
+ * SPDX-FileCopyrightText: 2021 Soar Qin <soarchin@gmail.com>
+ * SPDX-FileCopyrightText: 2026 tab5_jinyong contributors
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
+/*
  * Overlay of HeroesOfJinYong src/app/input_repeat.cc for ESP32-P4.
  *
  * Upstream back-fills every missed 20 ms repeat instant: after a long frame

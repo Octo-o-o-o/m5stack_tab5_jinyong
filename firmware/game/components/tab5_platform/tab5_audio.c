@@ -1,3 +1,8 @@
+/*
+ * SPDX-FileCopyrightText: 2026 tab5_jinyong contributors
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
 #include "tab5_platform.h"
 
 #include "bsp/m5stack_tab5.h"
@@ -27,20 +32,6 @@ bool tab5_audio_ready(void)
     return s_spk != NULL;
 }
 
-void tab5_audio_set_volume(int percent)
-{
-    if (s_spk == NULL) {
-        return;
-    }
-    if (percent < 0) {
-        percent = 0;
-    }
-    if (percent > 100) {
-        percent = 100;
-    }
-    ESP_ERROR_CHECK_WITHOUT_ABORT(esp_codec_dev_set_out_vol(s_spk, percent));
-}
-
 esp_err_t tab5_audio_open(int sample_rate, int channels)
 {
     if (s_spk == NULL) {
@@ -62,7 +53,7 @@ esp_err_t tab5_audio_open(int sample_rate, int channels)
         return err;
     }
     s_open = true;
-    ESP_LOGI(TAB5_TAG, "audio open %d Hz stereo S16", sample_rate);
+    ESP_LOGI(TAB5_TAG, "audio open %d Hz / %u ch S16", sample_rate, (unsigned)fs.channel);
     return ESP_OK;
 }
 

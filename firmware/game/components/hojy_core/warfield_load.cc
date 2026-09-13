@@ -1,4 +1,10 @@
 /*
+ * SPDX-FileCopyrightText: 2021 Soar Qin <soarchin@gmail.com>
+ * SPDX-FileCopyrightText: 2026 tab5_jinyong contributors
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
+/*
  * Overlay of HeroesOfJinYong src/scene/warfield_load.cc for ESP32-P4.
  * Only change: FIGHT###.GRP animation sets load on demand instead of all
  * 110 in the constructor. Battle rules are untouched.

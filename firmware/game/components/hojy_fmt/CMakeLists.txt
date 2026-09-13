@@ -1,7 +1,12 @@
+# SPDX-FileCopyrightText: 2026 tab5_jinyong contributors
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 set(HOJY_ROOT "${CMAKE_CURRENT_LIST_DIR}/../../../../third_party/HeroesOfJinYong")
 set(FMT_SRC_INC "${HOJY_ROOT}/deps/fmt/include")
 set(FMT_DST_INC "${CMAKE_CURRENT_BINARY_DIR}/fmt_inc")
 
+# The RISC-V toolchain has no __int128, and fmt's fallback uint128 lacks
+# operator~. Patch a private copy of the headers, not the submodule.
 file(COPY "${FMT_SRC_INC}/" DESTINATION "${FMT_DST_INC}")
 file(READ "${FMT_DST_INC}/fmt/format.h" HOJY_FMT_HDR)
 set(HOJY_FMT_NEEDLE "  friend constexpr auto operator|(const uint128& lhs, const uint128& rhs)")

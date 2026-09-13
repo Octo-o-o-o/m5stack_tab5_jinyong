@@ -1,4 +1,10 @@
 /*
+ * SPDX-FileCopyrightText: 2021 Soar Qin <soarchin@gmail.com>
+ * SPDX-FileCopyrightText: 2026 tab5_jinyong contributors
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
+/*
  * Overlay of HeroesOfJinYong src/scene/talkbox.cc for ESP32-P4.
  * Upstream caches the whole inset window; without ALLOW_ODD_WIDTH that
  * becomes 1024x512 (2MB) and CreateTexture fails after SMP/ALLSIN.

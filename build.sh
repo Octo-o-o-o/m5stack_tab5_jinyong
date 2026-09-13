@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# SPDX-FileCopyrightText: 2026 tab5_jinyong contributors
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
 # Configure and build the Tab5 game firmware (default) or bring-up.
 # Does not flash.
 

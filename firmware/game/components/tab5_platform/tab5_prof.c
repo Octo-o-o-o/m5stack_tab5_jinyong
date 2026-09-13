@@ -1,4 +1,9 @@
 /*
+ * SPDX-FileCopyrightText: 2026 tab5_jinyong contributors
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
+/*
  * Frame-phase profiler. One UART line every TAB5_PROF_PERIOD_US so that
  * "it feels slow" can be replaced with numbers before anything else is tuned.
  * Cost per frame is a handful of adds; the log itself is one line per period.
@@ -10,19 +15,13 @@
 
 #define TAB5_PROF_PERIOD_US 5000000ULL
 
-static bool s_enabled = true;
 static uint64_t s_acc[TAB5_PROF_COUNT];
 static uint32_t s_frames;
 static uint64_t s_window_start;
 
-void tab5_prof_set_enabled(bool on)
-{
-    s_enabled = on;
-}
-
 void tab5_prof_add(tab5_prof_slot_t slot, uint64_t us)
 {
-    if (!s_enabled || (unsigned)slot >= (unsigned)TAB5_PROF_COUNT) {
+    if ((unsigned)slot >= (unsigned)TAB5_PROF_COUNT) {
         return;
     }
     s_acc[slot] += us;
@@ -30,9 +29,6 @@ void tab5_prof_add(tab5_prof_slot_t slot, uint64_t us)
 
 void tab5_prof_end_frame(void)
 {
-    if (!s_enabled) {
-        return;
-    }
     ++s_frames;
     const uint64_t now = tab5_clock_us();
     if (s_window_start == 0) {

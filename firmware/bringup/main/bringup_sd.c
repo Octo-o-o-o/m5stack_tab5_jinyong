@@ -1,3 +1,8 @@
+/*
+ * SPDX-FileCopyrightText: 2026 tab5_jinyong contributors
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
 #include "bringup.h"
 
 #include "bsp/m5stack_tab5.h"
@@ -16,7 +21,7 @@ esp_err_t bringup_sd_start(void)
 
     ESP_LOGI(BRINGUP_TAG, "SD mounted at %s", BSP_SD_MOUNT_POINT);
 
-    const char *path = BSP_SD_MOUNT_POINT "/jinyong/config/bringup.txt";
+    const char *path = BSP_SD_MOUNT_POINT "/jinyong/config.toml";
     FILE *f = fopen(path, "r");
     if (f == NULL) {
         ESP_LOGW(BRINGUP_TAG, "missing %s — copy prepared data as /jinyong/ on the card", path);

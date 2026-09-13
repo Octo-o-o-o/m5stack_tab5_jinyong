@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 tab5_jinyong contributors
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 idf_component_register(
     SRCS
         "tab5_mem.c"
@@ -10,7 +13,6 @@ idf_component_register(
         "tab5_clock.c"
     INCLUDE_DIRS
         "include"
-        "../../../../platform/tab5"
     REQUIRES
         driver
         fatfs

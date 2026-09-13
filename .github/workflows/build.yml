@@ -1,0 +1,66 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  firmware:
+    name: firmware (${{ matrix.target }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [game, bringup]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # Only what the firmware compiles; upstream's SDL2 and soxr are not used.
+      - name: Fetch submodules
+        run: |
+          git submodule update --init third_party/HeroesOfJinYong
+          git -C third_party/HeroesOfJinYong submodule update --init deps/fmt
+
+      - name: Build
+        uses: espressif/esp-idf-ci-action@e6f5c74232b1ccd4c97ed641f1e48553853f1fd5 # v1.2.0
+        with:
+          esp_idf_version: v5.5.5
+          target: esp32p4
+          command: TAB5_FIRMWARE=${{ matrix.target }} ./build.sh
+
+      - name: Upload firmware
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: firmware-${{ matrix.target }}
+          path: |
+            firmware/${{ matrix.target }}/build/*.bin
+            firmware/${{ matrix.target }}/build/bootloader/bootloader.bin
+            firmware/${{ matrix.target }}/build/partition_table/partition-table.bin
+            firmware/${{ matrix.target }}/build/flash_args
+          if-no-files-found: error
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: shellcheck
+        run: shellcheck -x ./*.sh scripts/*.sh tools/host_test/run.sh
+
+      - name: Python syntax
+        run: python3 -m py_compile scripts/*.py tools/host_test/*.py
+
+      - name: REUSE licensing
+        uses: fsfe/reuse-action@676e2d560c9a403aa252096d99fcab3e1132b0f5 # v6.0.0

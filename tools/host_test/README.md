@@ -1,15 +1,17 @@
 # 本机无头测试台
 
-在 Mac 上跑**这个移植自己的游戏逻辑**，不用设备、不开窗口、不出声。
+在 macOS 上跑**这个移植自己的游戏逻辑**，不用设备、不开窗口、不出声。
 
 ```bash
-tools/host_test/run.sh "/Volumes/NO NAME/jinyong"    # 直接对着卡
 tools/host_test/run.sh local/sd_image/jinyong        # 对着本机镜像
+tools/host_test/run.sh "/Volumes/NO NAME/jinyong"    # 或者直接对着卡
 ```
+
+> **会改写目标目录 `save/` 里的 1–3 号存档槽。** 有要保留的存档，先拷一份镜像再对着副本跑。
 
 ## 它是什么
 
-把 upstream HeroesOfJinYong 编到本机，**把 `firmware/game/components/hojy_core/` 下的每一个覆盖层替换进去**，
+把 upstream HeroesOfJinYong 编到本机，**把 `firmware/game/components/hojy_core/` 下的每一个覆盖层替换进去**（按文件名，和固件的 CMake 同一规则），
 ESP-IDF 的头文件用 `shim/` 里的桩顶掉（`esp_log.h`、`tab5_platform.h`、`freertos/*`），
 然后用真实数据跑一遍：新游戏 → 按真实地图 BFS 出来的路线走到门口 → 检查是否真的进了大地图。
 
@@ -18,7 +20,7 @@ ESP-IDF 的头文件用 `shim/` 里的桩顶掉（`esp_log.h`、`tab5_platform.h
 它跑七件事：
 
 0. **按键重复**：按住 1 秒，动作键必须恰好出 1 个事件，方向键必须 > 1（不依赖卡数据，最先跑）
-1. **存档往返**：把卡上已有的第 1 槽读回来、用当前代码重写到第 2 槽，六个文件必须**逐字节相同**——存档写法改过之后，这是格式没变的证据（第一次跑时对比的是上一版代码留下的文件）
+1. **存档往返**：把目录里已有的第 1 槽读回来、用当前代码重写到第 2 槽，六个文件必须**逐字节相同**——存档写法改过之后，这是格式没变的证据（第一次跑时对比的是上一版代码留下的文件）
 2. **新游戏 → 走到门口 → 进大地图**（路线由 `probe_reach.py` 在真实地图上 BFS 出来）
 3. **菜单读档来回各一次**：大地图 → 子地图 → 大地图，报出各自峰值
 4. **流式 BGM**：读过一整圈，确认正确循环且常驻是几十 KB 而不是 4 MB
@@ -51,8 +53,10 @@ RESULT: PASS
 
 ## 依赖
 
+- macOS：内存统计用 `malloc_size` / `execinfo`
 - Homebrew 的 `sdl2-compat`（或 `sdl2`）；用 `SDL2_PREFIX=` 覆盖
 - cmake：走 `scripts/find_host_cmake.sh`，没装也能用 ESP-IDF 自带的那个
+- submodule 里的 `deps/fmt`、`deps/libADLMIDI`（`./setup.sh` 会拉）
 - 中间产物默认在 `$TMPDIR/tab5_jinyong_hosttest`，用 `HOST_TEST_WORK=` 改
 
 ## submodule 不被修改
@@ -67,8 +71,8 @@ upstream 有两处本机编不过、与本移植无关的问题，脚本在**拷
 不编译也能查地图数据：
 
 ```bash
-python3 tools/host_test/probe_exit.py  "/Volumes/NO NAME/jinyong"   # 起点/出口/是否被挡
-python3 tools/host_test/probe_reach.py "/Volumes/NO NAME/jinyong"   # 连通性洪泛 + 出门路线
+python3 tools/host_test/probe_exit.py  local/sd_image/jinyong   # 起点/出口/是否被挡
+python3 tools/host_test/probe_reach.py local/sd_image/jinyong   # 连通性洪泛 + 出门路线
 ```
 
 两者都按 `scene/submap.cc` 里 `SubMap::load` / `tryMove` 的**同一套阻挡规则**计算，

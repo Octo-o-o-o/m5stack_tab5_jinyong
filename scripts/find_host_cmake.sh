@@ -1,23 +1,25 @@
 # shellcheck shell=bash
-# Locate a host cmake without baking a personal path into the repo.
+# SPDX-FileCopyrightText: 2026 tab5_jinyong contributors
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# Print a host cmake: the one on PATH, else the copy ESP-IDF installs, else
+# Homebrew's. Exits non-zero when there is none. Run it, do not source it.
 
 if command -v cmake >/dev/null 2>&1; then
     command -v cmake
-    return 0 2>/dev/null || exit 0
+    exit 0
 fi
 
 for cand in \
-    "${HOME}/.espressif/tools/cmake/3.30.2/CMake.app/Contents/bin/cmake" \
     "${HOME}/.espressif/tools/cmake/"*/CMake.app/Contents/bin/cmake \
     "${HOME}/.espressif/tools/cmake/"*/bin/cmake \
     /opt/homebrew/bin/cmake \
     /usr/local/bin/cmake
- do
+do
     if [[ -x "${cand}" ]]; then
         echo "${cand}"
-        return 0 2>/dev/null || exit 0
+        exit 0
     fi
 done
 
-echo ""
-return 1 2>/dev/null || exit 1
+exit 1

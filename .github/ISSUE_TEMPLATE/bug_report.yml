@@ -1,0 +1,52 @@
+name: 问题报告 / Bug report
+description: 固件、SD 卡数据准备、脚本或文档的问题
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        请不要附带任何游戏数据文件（`.GRP` / `.IDX` / `Z.DAT` / 存档 / 字体）。安全问题请走 Security 页私密报告。
+
+  - type: input
+    id: version
+    attributes:
+      label: 固件版本
+      description: Release 版本号，或 `git describe --tags --dirty` 的输出；串口日志里 `App version:` 那一行也可以
+      placeholder: v0.1.0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: 出问题的环节
+      options:
+        - 游戏固件
+        - 自检固件（bringup）
+        - 准备 SD 卡（prepare_game_data.sh）
+        - 编译 / 刷机脚本
+        - 本机测试台
+        - 文档
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: 现象与复现步骤
+      description: 做了什么、期望看到什么、实际看到什么（屏上的文字、是否重启、在游戏里的哪一步）
+    validations:
+      required: true
+
+  - type: textarea
+    id: log
+    attributes:
+      label: 串口日志
+      description: '`./monitor.sh` 的输出，至少从开机到出问题为止；panic 回溯请完整贴出'
+      render: text
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: 环境
+      description: 屏幕型号（日志里 `panel guess:` 那行）、SD 卡容量与格式、主机系统、ESP-IDF 版本（自己编译时）
