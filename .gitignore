@@ -71,6 +71,10 @@ id_rsa
 wifi_password*
 credentials*
 
+# Python bytecode (py_compile in CI writes these)
+__pycache__/
+*.pyc
+
 # Editor / OS
 .DS_Store
 .idea/
